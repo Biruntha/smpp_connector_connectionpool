@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ~  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ ~
+ ~  WSO2 Inc. licenses this file to you under the Apache License,
+ ~  Version 2.0 (the "License"); you may not use this file except
+ ~  in compliance with the License.
+ ~  You may obtain a copy of the License at
+ ~
+ ~    http://www.apache.org/licenses/LICENSE-2.0
+ ~
+ ~  Unless required by applicable law or agreed to in writing,
+ ~  software distributed under the License is distributed on an
+ ~  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~  KIND, either express or implied.  See the License for the
+ ~  specific language governing permissions and limitations
+ ~  under the License.
+-->
+
+<template name="init" xmlns="http://ws.apache.org/ns/synapse">
+    <parameter name="host" description="IP address of the SMSC"/>
+    <parameter name="port" description="Port to access the SMSC"/>
+    <parameter name="systemId" description="Identifies the user requesting to bind (username)"/>
+    <parameter name="password" description="Password to allow access"/>
+    <parameter name="systemType" description="Identifies the system type "/>
+    <parameter name="serviceType" description="Indicates SMS application service"/>
+    <parameter name="addressTon" description="Identifies user type of number"/>
+    <parameter name="addressNpi" description="Numbering plan indicator for user"/>
+    <parameter name="sourceAddressTon" description="Type of number for source address"/>
+    <parameter name="sourceAddressNpi" description="Numbering plan indicator for source address"/>
+    <parameter name="sourceAddress" description="Source address"/>
+    <parameter name="distinationAddressTon" description="Type of number for destination"/>
+    <parameter name="distinationAddressNpi" description="Numbering plan indicator for destination"/>
+    <parameter name="distinationAddress" description="Destination address of the short message"/>
+    <parameter name="esmclass" description="Used to define message mode and message type"/>
+    <parameter name="protocolid" description="Protocol identifier"/>
+    <parameter name="priorityflag" description="Sets the priority of the message"/>
+    <parameter name="smscDeliveryReceipt" description="Indicator to signify if an SMSC delivery receipt or acknowledgment is required"/>
+    <parameter name="messageClass" description=""/>
+    <parameter name="isCompressed" description=""/>
+    <parameter name="replaceIfPresentFlag" description="Flag indicating if submitted message should replace an existing message"/>
+    <parameter name="alphabet" description="Used to defines the encoding scheme of the SMS message"/>
+    <parameter name="submitDefaultMsgId" description="Indicates short message to send from a predefined list of messages stored on SMSC"/>
+    <parameter name="connectionPoolSize" description="Maximum number of connections allowed for a single SMSC + SystemId Combination"/>
+    <sequence>
+        <property name="host" expression="$func:host"/>
+        <property name="port" expression="$func:port"/>
+        <property name="systemId" expression="$func:systemId"/>
+        <property name="password" expression="$func:password"/>
+        <property name="systemType" expression="$func:systemType"/>
+        <property name="serviceType" expression="$func:serviceType"/>
+        <property name="addressTon" expression="$func:addressTon"/>
+        <property name="addressNpi" expression="$func:addressNpi"/>
+        <property name="sourceAddressTon" expression="$func:sourceAddressTon"/>
+        <property name="sourceAddressNpi" expression="$func:sourceAddressNpi"/>
+        <property name="sourceAddress" expression="$func:sourceAddress"/>
+        <property name="distinationAddressTon" expression="$func:distinationAddressTon"/>
+        <property name="distinationAddressNpi" expression="$func:distinationAddressNpi"/>
+        <property name="distinationAddress" expression="$func:distinationAddress"/>
+        <property name="alphabet" expression="$func:alphabet"/>
+        <property name="smscDeliveryReceipt" expression="$func:smscDeliveryReceipt"/>
+        <property name="messageClass" expression="$func:messageClass"/>
+        <property name="isCompressed" expression="$func:isCompressed"/>
+        <property name="esmclass" expression="$func:esmclass"/>
+        <property name="protocolid" expression="$func:protocolid"/>
+        <property name="priorityflag" expression="$func:priorityflag"/>
+        <property name="replaceIfPresentFlag" expression="$func:replaceIfPresentFlag"/>
+        <property name="submitDefaultMsgId" expression="$func:submitDefaultMsgId"/>
+        <property name="connectionPoolSize" expression="$func:connectionPoolSize"/>
+        <class name="org.wso2.carbon.esb.connector.SMSConfig"/>
+    </sequence>
+</template>

@@ -1,0 +1,42 @@
+Product: Integration tests for WSO2 ESB SMPP connector
+
+Pre-requisites:
+
+ - Maven 3.x
+ - Java 1.7
+ - The org.wso2.esb.integration.integration-base project is required. The test suite has been configured to download this project automatically.
+   If the automatic download fails, download the following project and compile it using the mvn clean install command to update your local repository:
+   https://github.com/wso2-extensions/esb-integration-base
+
+Tested Platform: 
+
+ - UBUNTU 16.04
+ - WSO2 ESB 5.0.0
+
+
+STEPS:
+
+ 1.Download ESB 5.0.0 from official website and extract the ESB and add "-XX:-UseSplitVerifier" under $JVM_MEM_OPTS into {ESB_HOME}/bin/wso2server.sh.
+
+ 2. Compress modified ESB and copy that zip file in to location "{SMPP_CONNECTOR_HOME}/repository/".
+
+ 3. Before start the ESB, download jsmpp-2.1.0-RELEASE.jar copy inside the {ESB_HOME}/repository/components/lib
+
+ 4. Integration test written based on SMSC simulator. To do that download simulator from https://github.com/smn/logica-smpp-sim
+
+ 5. Go to SMSC Simulator directory, edit the users.txt file and add following name-value pairs to it.
+
+   name="your username"
+   password="your password"
+   timeout=unlimited
+
+ 6. Go to "{SMPP_HOME}/src/test/resources/artifacts/ESB/connector/config/SMPP.properties" and edit your host, port, username, password.
+
+ 7. Start SMSC Simulator by executing the following command, "java -cp smpp.jar:smscsim.jar com.logica.smscsim.Simulator".
+
+ 8. You will see a simulator screen. There,
+                Enter 1 for the prompt to start simulation.
+                Enter port number as you provided in the SMPP.properties.
+                You will see the “Starting listener... started.” log on the console.
+
+ 9. Go to "{SMPP_HOME}/" and type "mvn clean install" to test and build.
