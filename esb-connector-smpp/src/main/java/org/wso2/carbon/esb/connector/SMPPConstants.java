@@ -63,6 +63,8 @@ public class SMPPConstants {
     public static final String CONNECTION_CONTEXT = "connectionContext";
     public static final String CONNECTION_POOL = "connectionPool";
     public static final String IS_POOL_INITIALIZED = "isPoolInitialized";
-    public static final String START_TAG = "<result><messageId>";
-    public static final String END_TAG = "</messageId></result>";
+    public static final String SMPPCON = "http://org.wso2.esbconnectors.SMPPConnector";
+    public static final String NAMESPACE = "ns";
+    public static final String RESULT = "result";
+    public static final String MESSAGE_ID = "messageId";
 }
