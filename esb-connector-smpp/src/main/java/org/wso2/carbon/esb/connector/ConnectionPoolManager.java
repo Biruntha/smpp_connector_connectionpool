@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Class to act as a single reference point for all connectionPool Objects.
+ * It is act as a single reference point for all connectionPool Objects.
  *
  * @since 1.0.2
  */
@@ -41,9 +41,11 @@ public class ConnectionPoolManager {
     private Map<String, ConnectionPool> connectionPool = new ConcurrentHashMap<String, ConnectionPool>();
 
     /**
-     * create an object of ConnectionPoolManager.
+     * Create an object of ConnectionPoolManager.
+     *
+     * @return ConnectionPoolManager object.
      */
-    public static ConnectionPoolManager getInstance() {
+    static ConnectionPoolManager getInstance() {
         if (log.isDebugEnabled()) {
             log.debug("Initializing Connection Pool Manager");
         }
@@ -54,18 +56,22 @@ public class ConnectionPoolManager {
     }
 
     /**
+     * Put single ConnectionPool object into pool of connections.
+     *
      * @param key   Identity for a single SystemId + SMSC combination.
      * @param value Connection Pool object for a single SMSC + SystemId combination.
      */
-    public void put(String key, ConnectionPool value) {
+    void put(String key, ConnectionPool value) {
         connectionPool.put(key, value);
     }
 
     /**
+     * Get single ConnectionPool object from pool of connections.
+     *
      * @param key Identity for a single SMSC + SystemId combination.
      * @return Connection Pool object for a single SMSC + SystemId combination.
      */
-    public ConnectionPool get(String key) {
+    ConnectionPool get(String key) {
         return connectionPool.get(key);
     }
 }
