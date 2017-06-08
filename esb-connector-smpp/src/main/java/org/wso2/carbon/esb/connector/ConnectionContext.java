@@ -17,8 +17,10 @@
  */
 package org.wso2.carbon.esb.connector;
 
+import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
-import org.apache.axiom.om.util.AXIOMUtil;
+import org.apache.axiom.om.OMFactory;
+import org.apache.axiom.om.OMNamespace;
 import org.apache.axiom.soap.SOAPBody;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,127 +48,46 @@ import java.util.Iterator;
  *
  * @since 1.0.2
  */
-public class ConnectionContext {
+class ConnectionContext {
 
     private static final Log log = LogFactory.getLog(ConnectionContext.class);
     /**
      * SMPP Session used to communicate with SMSC.
      */
     private SMPPSession session;
-    /**
-     * port to access the SMSC.
-     */
-    private int port;
-    /**
-     * The password may be used by the SMSC to authenticate the ESME requesting to bind.
-     */
-    private String password;
-    /**
-     * Used to check whether SMSC is connected or not.
-     */
-    private int enquireLinkTimer;
-    /**
-     * Time elapsed between smpp request and the corresponding response.
-     */
-    private int transactionTimer;
-    /**
-     * Identifies the type of ESME system requesting to bind as a transmitter with the SMSC.
-     */
-    private String systemType;
-    /**
-     * Indicates Type of Number of the ESME address.
-     */
-    private String addressTON;
-    /**
-     * Numbering Plan Indicator for ESME address.
-     */
-    private String addressNPI;
-    /**
-     * Indicates SMS application service.
-     */
-    private String serviceType;
-    /**
-     * Type of number for source address.
-     */
-    private String sourceAddressTon;
-    /**
-     * Numbering plan indicator for source address.
-     */
-    private String sourceAddressNpi;
-    /**
-     * Source address of the short message.
-     */
-    private String sourceAddress;
-    /**
-     * Type of number for destination.
-     */
-    private String distinationAddressTon;
-    /**
-     * Numbering plan indicator for destination.
-     */
-    private String distinationAddressNpi;
-    /**
-     * Destination address of the short message.
-     */
-    private String distinationAddress;
-    /**
-     * Used to define message mode and message type.
-     */
-    private int esmClass;
-    /**
-     * Protocol identifier.
-     */
-    private int protocolId;
-    /**
-     * Sets the priority of the message.
-     */
-    private int priorityFlag;
-    /**
-     * Delivery of the message.
-     */
-    private TimeFormatter timeFormatter;
-    /**
-     * Validity period of message.
-     */
-    private String validityPeriod;
-    /**
-     * Type of the SMSC delivery receipt.
-     */
-    private String smscDeliveryReceipt;
-    /**
-     * Flag indicating if submitted message should replace an existing message.
-     */
-    private int replaceifpresentflag;
-    /**
-     * Alphabet used in the data encoding of the message.
-     */
-    private String alphabet;
-    /**
-     * Defines the encoding scheme of the SMS message.
-     */
-    private GeneralDataCoding dataCoding;
-    /**
-     * Indicates short message to send from a predefined list of messages stored on SMSC.
-     */
-    private int submitdefaultmsgid;
-    /**
-     * Content of the SMS.
-     */
-    private String message;
 
     /**
-     * Initialize the ConnectionContext for a specific destination planning to use a pre-defined SMPP connection.
+     * Creating SMPP connection.
      */
-    public ConnectionContext(String host, String systemId, MessageContext messageContext) throws Exception {
-        port = Integer.parseInt(messageContext.getProperty(SMPPConstants.PORT).toString());
-        password = messageContext.getProperty(SMPPConstants.PASSWORD).toString();
-        enquireLinkTimer = Integer.parseInt(messageContext.getProperty(
-                SMPPConstants.ENQUIRE_LINK_TIMER).toString());
-        transactionTimer = Integer.parseInt(messageContext.getProperty(
-                SMPPConstants.TRANSACTION_TIMER).toString());
-        systemType = messageContext.getProperty(SMPPConstants.SYSTEM_TYPE).toString();
-        addressTON = messageContext.getProperty(SMPPConstants.ADDRESS_TON).toString();
-        addressNPI = messageContext.getProperty(SMPPConstants.ADDRESS_NPI).toString();
+    ConnectionContext(String host, String systemId, MessageContext messageContext) throws IOException {
+        /*
+          port to access the SMSC.
+         */
+        int port = Integer.parseInt(messageContext.getProperty(SMPPConstants.PORT).toString());
+        /*
+          The password may be used by the SMSC to authenticate the ESME requesting to bind.
+         */
+        String password = messageContext.getProperty(SMPPConstants.PASSWORD).toString();
+        /*
+          Used to check whether SMSC is connected or not.
+         */
+        int enquireLinkTimer = Integer.parseInt(messageContext.getProperty(SMPPConstants.ENQUIRE_LINK_TIMER).toString());
+        /*
+          Time elapsed between smpp request and the corresponding response.
+         */
+        int transactionTimer = Integer.parseInt(messageContext.getProperty(SMPPConstants.TRANSACTION_TIMER).toString());
+        /*
+          Identifies the type of ESME system requesting to bind as a transmitter with the SMSC.
+         */
+        String systemType = messageContext.getProperty(SMPPConstants.SYSTEM_TYPE).toString();
+        /*
+          Indicates Type of Number of the ESME address.
+         */
+        String addressTON = messageContext.getProperty(SMPPConstants.ADDRESS_TON).toString();
+        /*
+          Numbering Plan Indicator for ESME address.
+         */
+        String addressNPI = messageContext.getProperty(SMPPConstants.ADDRESS_NPI).toString();
         try {
             BindParameter bindParameter = new BindParameter(BindType.BIND_TX,
                     systemId, password, systemType,
@@ -180,51 +101,95 @@ public class ConnectionContext {
                 log.debug("Conected and bind to " + host);
             }
         } catch (IOException e) {
-            throw new IOException("Error while configuring: " + e.getMessage(), e);
+            throw new IOException("Error while configuring: ", e);
         }
     }
 
     /**
      * Method exposed to publish a message using this SMPP session.
      */
-    public void publishMessage(MessageContext messageContext) throws PDUException,
-            ResponseTimeoutException, InvalidResponseException, NegativeResponseException, IOException, XMLStreamException, JSONException {
+    void publishMessage(MessageContext messageContext) throws PDUException, ResponseTimeoutException,
+            InvalidResponseException, NegativeResponseException, IOException, XMLStreamException, JSONException {
         if (log.isDebugEnabled()) {
-            log.debug("started to load params for publishing message");
+            log.debug("started to load parameters for publishing SMPP message");
         }
-        serviceType = messageContext.getProperty(SMPPConstants.SERVICE_TYPE).toString();
-        sourceAddressTon = messageContext.getProperty(
-                SMPPConstants.SOURCE_ADDRESS_TON).toString();
-        sourceAddressNpi = messageContext.getProperty(
-                SMPPConstants.SOURCE_ADDRESS_NPI).toString();
-        sourceAddress = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS).toString();
-        distinationAddressTon = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS_TON).toString();
-        distinationAddressNpi = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS_NPI).toString();
-        distinationAddress = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS).toString();
-        esmClass = Integer.parseInt(messageContext.getProperty(
-                SMPPConstants.ESM_CLASS).toString());
-        protocolId = Integer.parseInt(messageContext.getProperty(
-                SMPPConstants.PROTOCOL_ID).toString());
-        priorityFlag = Integer.parseInt(messageContext.getProperty(
-                SMPPConstants.PRIORITY_FLAG).toString());
-        timeFormatter = new AbsoluteTimeFormatter();
-        validityPeriod = messageContext.getProperty(SMPPConstants.VALIDITY_PERIOD).toString();
-        smscDeliveryReceipt = messageContext.getProperty(
-                SMPPConstants.SMSC_DELIVERY_RECEIPT).toString();
-        replaceifpresentflag = Integer.parseInt(messageContext.getProperty(
+        /*
+          Indicates SMS application service.
+         */
+        String serviceType = messageContext.getProperty(SMPPConstants.SERVICE_TYPE).toString();
+        /*
+          Type of number for source address.
+         */
+        String sourceAddressTon = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS_TON).toString();
+        /*
+          Numbering plan indicator for source address.
+         */
+        String sourceAddressNpi = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS_NPI).toString();
+        /*
+          Source address of the short message.
+         */
+        String sourceAddress = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS).toString();
+        /*
+          Type of number for destination.
+         */
+        String distinationAddressTon = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS_TON).toString();
+        /*
+          Numbering plan indicator for destination.
+         */
+        String distinationAddressNpi = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS_NPI).toString();
+        /*
+          Destination address of the short message.
+         */
+        String distinationAddress = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS).toString();
+        /*
+          Used to define message mode and message type.
+         */
+        int esmClass = Integer.parseInt(messageContext.getProperty(SMPPConstants.ESM_CLASS).toString());
+        /*
+          Protocol identifier.
+         */
+        int protocolId = Integer.parseInt(messageContext.getProperty(SMPPConstants.PROTOCOL_ID).toString());
+        /*
+          Sets the priority of the message.
+         */
+        int priorityFlag = Integer.parseInt(messageContext.getProperty(SMPPConstants.PRIORITY_FLAG).toString());
+        /*
+          Delivery of the message.
+         */
+        TimeFormatter timeFormatter = new AbsoluteTimeFormatter();
+        /*
+          Validity period of message.
+         */
+        String validityPeriod = messageContext.getProperty(SMPPConstants.VALIDITY_PERIOD).toString();
+        /*
+          Type of the SMSC delivery receipt.
+         */
+        String smscDeliveryReceipt = messageContext.getProperty(SMPPConstants.SMSC_DELIVERY_RECEIPT).toString();
+        /*
+          Flag indicating if submitted message should replace an existing message.
+         */
+        int replaceifpresentflag = Integer.parseInt(messageContext.getProperty(
                 SMPPConstants.REPLACE_IF_PRESENT_FLAG).toString());
-        alphabet = messageContext.getProperty(SMPPConstants.ALPHABET).toString();
+        /*
+          Alphabet used in the data encoding of the message.
+         */
+        String alphabet = messageContext.getProperty(SMPPConstants.ALPHABET).toString();
         String messageClass = messageContext.getProperty(SMPPConstants.MESSAGE_CLASS).toString();
-        Boolean iscompressed = Boolean.parseBoolean(messageContext.getProperty(
-                SMPPConstants.IS_COMPRESSED).toString());
-        dataCoding = new GeneralDataCoding(Alphabet.valueOf(alphabet),
+        Boolean iscompressed = Boolean.parseBoolean(messageContext.getProperty(SMPPConstants.IS_COMPRESSED).toString());
+        /*
+          Defines the encoding scheme of the SMS message.
+         */
+        GeneralDataCoding dataCoding = new GeneralDataCoding(Alphabet.valueOf(alphabet),
                 MessageClass.valueOf(messageClass), iscompressed);
-        submitdefaultmsgid = Integer.parseInt(messageContext.getProperty(
+        /*
+          Indicates short message to send from a predefined list of messages stored on SMSC.
+         */
+        int submitdefaultmsgid = Integer.parseInt(messageContext.getProperty(
                 SMPPConstants.SUBMIT_DEFAULT_MESSAGE_ID).toString());
-        message = messageContext.getProperty(SMPPConstants.SMS_MESSAGE).toString();
+        /*
+          Content of the SMS.
+         */
+        String message = messageContext.getProperty(SMPPConstants.SMS_MESSAGE).toString();
         try {
             //Send the SMS message.
             String messageId = session.submitShortMessage(
@@ -243,10 +208,7 @@ public class ConnectionContext {
                     (byte) replaceifpresentflag,
                     dataCoding, (byte) submitdefaultmsgid,
                     message.getBytes());
-            String response = SMPPConstants.START_TAG + messageId + SMPPConstants.END_TAG;
-            OMElement element;
-            element = transformMessages(response);
-            preparePayload(messageContext, element);
+            generateResult(messageContext, messageId);
 
             if (log.isDebugEnabled()) {
                 log.debug("Message submitted, message_id is " + messageId);
@@ -254,74 +216,69 @@ public class ConnectionContext {
         } catch (PDUException e) {
             // Invalid PDU parameter.
             session = null;
-            throw new PDUException("Invalid PDU parameter" + e.getMessage(), e);
+            throw new PDUException("Invalid PDU parameter ", e);
         } catch (ResponseTimeoutException e) {
             // Response timeout.
             session = null;
-            throw new ResponseTimeoutException("Response timeout" + e.getMessage(), e);
+            throw new ResponseTimeoutException("Response timeout ", e);
         } catch (InvalidResponseException e) {
             // Invalid responselid respose.
             session = null;
-            throw new InvalidResponseException("Invalid response" + e.getMessage(), e);
+            throw new InvalidResponseException("Invalid response ", e);
         } catch (NegativeResponseException e) {
             // Receiving negative response (non-zero command_status).
             session = null;
-            throw new IOException("Receive negative response" + e.getMessage(), e);
+            throw new IOException("Receive negative response ", e);
         } catch (IOException e) {
             session = null;
-            throw new IOException("IO error occur" + e.getMessage(), e);
-        } catch (XMLStreamException e) {
-            throw new XMLStreamException("Error while preparing the payload " + e.getMessage(), e);
-        } catch (JSONException e) {
-            throw new JSONException("Error while preparing the payload ");
+            throw new IOException("IO error occur", e);
         }
     }
 
     /**
-     * Prepare payload.
+     * Generate the result(messageId) to display after sending SMS.
      *
-     * @param messageContext The message context that is processed by a handler in the handle method.
-     * @param element        OMElement.
+     * @param messageContext The message context that is used in generate result mediation flow.
+     * @param output         Result to display after sending message.
      */
-    private void preparePayload(MessageContext messageContext, OMElement element) {
+    private static void generateResult(MessageContext messageContext, String output) {
+        OMFactory factory = OMAbstractFactory.getOMFactory();
+        OMNamespace ns = factory.createOMNamespace(SMPPConstants.SMPPCON, SMPPConstants.NAMESPACE);
+        OMElement result = factory.createOMElement(SMPPConstants.RESULT, ns);
+        OMElement messageElement = factory.createOMElement(SMPPConstants.MESSAGE_ID, ns);
+        messageElement.setText(output);
+        result.addChild(messageElement);
+        preparePayload(messageContext, result);
+    }
+
+    /**
+     * Prepare payload is used to delete the element in existing body and add the new element.
+     *
+     * @param messageContext The message context that is used to prepare payload message flow.
+     * @param element        The OMElement that needs to be added in the body.
+     */
+    private static void preparePayload(MessageContext messageContext, OMElement element) {
         SOAPBody soapBody = messageContext.getEnvelope().getBody();
         for (Iterator itr = soapBody.getChildElements(); itr.hasNext(); ) {
             OMElement child = (OMElement) itr.next();
             child.detach();
         }
-        for (Iterator itr = element.getChildElements(); itr.hasNext(); ) {
-            OMElement child = (OMElement) itr.next();
-            soapBody.addChild(child);
-        }
-    }
-
-    /**
-     * Create a OMElement.
-     *
-     * @param output output.
-     * @return return resultElement.
-     * @throws XMLStreamException
-     * @throws IOException
-     * @throws org.codehaus.jettison.json.JSONException
-     */
-    private OMElement transformMessages(String output) throws XMLStreamException, IOException,
-            JSONException {
-        OMElement resultElement;
-        resultElement = AXIOMUtil.stringToOM(output);
-        return resultElement;
+        soapBody.addChild(element);
     }
 
     /**
      * Get session Object.
+     *
+     * @return SMPPSession SMPP session object.
      */
-    public SMPPSession getSession() {
+    SMPPSession getSession() {
         return session;
     }
 
     /**
      * Method to properly shutdown the SMPP sessions and connections in the proper order.
      */
-    public void close() {
+    void close() {
         if (session != null && session.getSessionState().isBound()) {
             session.unbindAndClose();
             if (log.isDebugEnabled()) {
@@ -331,8 +288,7 @@ public class ConnectionContext {
     }
 
     /**
-     * This class will receive the notification from {@link SMPPSession} for the
-     * state changes.
+     * This class will receive the notification from {@link SMPPSession} for the state changes.
      */
     private class SessionStateListenerImpl implements SessionStateListener {
         @Override
