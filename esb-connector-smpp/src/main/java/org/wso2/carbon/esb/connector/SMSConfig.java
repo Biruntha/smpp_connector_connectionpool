@@ -21,41 +21,23 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.synapse.MessageContext;
 import org.wso2.carbon.connector.core.AbstractConnector;
 import org.wso2.carbon.connector.core.ConnectException;
-import org.wso2.carbon.connector.core.Connector;
 
 /**
  * SMPP Connector Configuration.
  *
  * @since 1.0.2
  */
-public class SMSConfig extends AbstractConnector implements Connector {
-    /**
-     * Get the Connection Pool Manager.
-     */
-    private ConnectionPoolManager connectionPoolManager;
-    /**
-     * Key identity for SystemId + SMSC Combination.
-     */
-    private String connectionContextKey;
-    /**
-     * Get the Connection Pool.
-     */
-    private ConnectionPool connectionPool;
+public class SMSConfig extends AbstractConnector {
     /**
      * Get the Connection Context.
      */
     private ConnectionContext connectionContext;
-    /**
-     * Is set to true if the Connection Pool is already initialized.
-     */
-    private Boolean isPoolInitialized;
 
     /**
-     * @param messageContext The message context that is processed by a handler in the handle method.
-     * @throws ConnectException
+     * @param messageContext It is the representation for a message within the ESB message flow.
      */
     @Override
-    public void connect(MessageContext messageContext) throws ConnectException {
+    public void connect(MessageContext messageContext) {
         //IP address of the SMSC.
         String host = messageContext.getProperty(SMPPConstants.HOST).toString();
         if (StringUtils.isEmpty(host)) {
@@ -99,30 +81,25 @@ public class SMSConfig extends AbstractConnector implements Connector {
         //Source address of the short message.
         String sourceAddress = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS).toString();
         //Type of number for source address.
-        String sourceAddressTon = messageContext.getProperty(
-                SMPPConstants.SOURCE_ADDRESS_TON).toString();
+        String sourceAddressTon = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS_TON).toString();
         if (StringUtils.isEmpty(sourceAddressTon)) {
             handleException("Source Address TON is not set for " + sourceAddress, messageContext);
         }
         //Numbering plan indicator for source address.
-        String sourceAddressNpi = messageContext.getProperty(
-                SMPPConstants.SOURCE_ADDRESS_NPI).toString();
+        String sourceAddressNpi = messageContext.getProperty(SMPPConstants.SOURCE_ADDRESS_NPI).toString();
         if (StringUtils.isEmpty(sourceAddressNpi)) {
             handleException("Source Address NPI is not set for " + sourceAddress, messageContext);
         }
         //Destination address of the short message.
-        String distinationAddress = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS).toString();
+        String distinationAddress = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS).toString();
         //Type of number for destination.
-        String distinationAddressTon = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS_TON).toString();
+        String distinationAddressTon = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS_TON).toString();
         if (StringUtils.isEmpty(distinationAddressTon)) {
             handleException("Distination Address TON is not set for " + distinationAddress,
                     messageContext);
         }
         //Numbering plan indicator for destination.
-        String distinationAddressNpi = messageContext.getProperty(
-                SMPPConstants.DISTINATION_ADDRESS_NPI).toString();
+        String distinationAddressNpi = messageContext.getProperty(SMPPConstants.DISTINATION_ADDRESS_NPI).toString();
         if (StringUtils.isEmpty(distinationAddressNpi)) {
             handleException("Distination Address NPI is not set for " + distinationAddress,
                     messageContext);
@@ -146,14 +123,12 @@ public class SMSConfig extends AbstractConnector implements Connector {
             messageContext.setProperty(SMPPConstants.PRIORITY_FLAG, SMPPConstants.ZERO);
         }
         //Type of the SMSC delivery receipt.
-        String smscDeliveryReceipt = messageContext.getProperty(
-                SMPPConstants.SMSC_DELIVERY_RECEIPT).toString();
+        String smscDeliveryReceipt = messageContext.getProperty(SMPPConstants.SMSC_DELIVERY_RECEIPT).toString();
         if (StringUtils.isEmpty(smscDeliveryReceipt)) {
             messageContext.setProperty(SMPPConstants.SMSC_DELIVERY_RECEIPT, SMPPConstants.DEFAULT);
         }
         //Flag indicating if submitted message should replace an existing message.
-        String replaceifpresentflag = messageContext.getProperty(
-                SMPPConstants.REPLACE_IF_PRESENT_FLAG).toString();
+        String replaceifpresentflag = messageContext.getProperty(SMPPConstants.REPLACE_IF_PRESENT_FLAG).toString();
         if (StringUtils.isEmpty(replaceifpresentflag)) {
             //set it to default value.
             messageContext.setProperty(SMPPConstants.REPLACE_IF_PRESENT_FLAG, SMPPConstants.ZERO);
@@ -173,27 +148,26 @@ public class SMSConfig extends AbstractConnector implements Connector {
             messageContext.setProperty(SMPPConstants.IS_COMPRESSED, SMPPConstants.FALSE);
         }
         //Indicates short message to send from a predefined list of messages stored on SMSC.
-        String submitdefaultmsgid = messageContext.getProperty(
-                SMPPConstants.SUBMIT_DEFAULT_MESSAGE_ID).toString();
+        String submitdefaultmsgid = messageContext.getProperty(SMPPConstants.SUBMIT_DEFAULT_MESSAGE_ID).toString();
         if (StringUtils.isEmpty(submitdefaultmsgid)) {
             //set it to default value.
             messageContext.setProperty(SMPPConstants.SUBMIT_DEFAULT_MESSAGE_ID, SMPPConstants.ZERO);
         }
-        String enquireLinktimer = messageContext.getProperty(
-                SMPPConstants.ENQUIRE_LINK_TIMER).toString();
+        String enquireLinktimer = messageContext.getProperty(SMPPConstants.ENQUIRE_LINK_TIMER).toString();
         if (StringUtils.isEmpty(enquireLinktimer)) {
             //set it to default value.
-            messageContext.setProperty(SMPPConstants.ENQUIRE_LINK_TIMER,
-                    SMPPConstants.ENQUIRELINK_TIMER_DEFAULT);
+            messageContext.setProperty(SMPPConstants.ENQUIRE_LINK_TIMER, SMPPConstants.ENQUIRELINK_TIMER_DEFAULT);
         }
-        String transactiontimer = messageContext.getProperty(
-                SMPPConstants.TRANSACTION_TIMER).toString();
+        String transactiontimer = messageContext.getProperty(SMPPConstants.TRANSACTION_TIMER).toString();
         if (StringUtils.isEmpty(transactiontimer)) {
             //set it to default value.
-            messageContext.setProperty(SMPPConstants.TRANSACTION_TIMER,
-                    SMPPConstants.TRANSACTION_TIMER_DEFAULT);
+            messageContext.setProperty(SMPPConstants.TRANSACTION_TIMER, SMPPConstants.TRANSACTION_TIMER_DEFAULT);
         }
         String connectionPoolSize = messageContext.getProperty(SMPPConstants.CONNECTION_POOL_SIZE).toString();
+        /*
+          Is set to true if the Connection Pool is already initialized.
+         */
+        Boolean isPoolInitialized;
         if (StringUtils.isEmpty(connectionPoolSize) || StringUtils.equals(connectionPoolSize, "0")) {
             isPoolInitialized = false;
             //Get the Connection Context.
@@ -204,17 +178,26 @@ public class SMSConfig extends AbstractConnector implements Connector {
             }
         } else {
             isPoolInitialized = true;
-            connectionPoolManager = ConnectionPoolManager.getInstance();
+            /*
+              Get the Connection Pool Manager.
+             */
+            ConnectionPoolManager connectionPoolManager = ConnectionPoolManager.getInstance();
             log.info("Processing message for destination : " + host + " with " + systemId);
             if (log.isDebugEnabled()) {
                 log.debug("Processing message for destination : " + host + " with " + systemId);
             }
-            connectionContextKey = systemId + ":" + host;
+            /*
+              Key identity for SystemId + SMSC Combination.
+             */
+            String connectionContextKey = systemId + ":" + host;
             if (log.isDebugEnabled()) {
                 log.debug("PublisherContextKey : " + connectionContextKey + " for " + host
                         + " and " + systemId + "with Connection pool size " + connectionPoolSize);
             }
-            connectionPool = connectionPoolManager.get(connectionContextKey);
+            /*
+              Get the Connection Pool.
+             */
+            ConnectionPool connectionPool = connectionPoolManager.get(connectionContextKey);
             if (null == connectionPool) {
                 if (log.isDebugEnabled()) {
                     log.debug("SMPP Connection pool is miss for destination : " + host);
