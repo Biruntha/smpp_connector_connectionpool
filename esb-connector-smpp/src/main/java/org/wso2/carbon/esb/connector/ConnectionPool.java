@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.MessageContext;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,13 +43,13 @@ public class ConnectionPool {
     /**
      * Will maintain already created and available connections upto the max limit.
      */
-    public List<ConnectionContext> freePublishers = new ArrayList<ConnectionContext>();
+    private List<ConnectionContext> freePublishers = new ArrayList<ConnectionContext>();
     /**
      * Will maintain no of connections currently in use.
      */
     private int count = 0;
     /**
-     * The message context that is processed by a handler in the handle method.
+     * It is the representation for a message within the ESB message flow.
      */
     private MessageContext messageContext;
     /**
@@ -63,8 +64,7 @@ public class ConnectionPool {
     /**
      * Initialize the Connection pool with max Pool size.
      */
-    public ConnectionPool(String host, String systemId, int maxPoolSize,
-                          MessageContext messageContext) {
+    ConnectionPool(String host, String systemId, int maxPoolSize, MessageContext messageContext) {
         this.host = host;
         this.systemId = systemId;
         this.maxSize = maxPoolSize;
@@ -73,8 +73,11 @@ public class ConnectionPool {
 
     /**
      * Get the Publisher.
+     *
+     * @return ConnectionContext It maintains all the SMPP sessions and connections to a single SMSC.
+     * @throws IOException When configuring SMSC.
      */
-    public ConnectionContext getPublisher() throws Exception {
+    ConnectionContext getPublisher() throws IOException {
         printDebugLog("Requesting publisher.");
         for (Iterator<ConnectionContext> iterator = freePublishers.iterator();
              iterator.hasNext(); ) {
@@ -92,24 +95,23 @@ public class ConnectionPool {
             return publisher;
         } else if (canHaveMorePublishers()) {
             ConnectionContext publisher = new ConnectionContext(host, systemId, messageContext);
-            printDebugLog("Created and returning a whole new publisher for destination with hash : "
-                    + publisher);
+            printDebugLog("Created and returning a whole new publisher for destination with hash : " + publisher);
             count++;
 
             return publisher;
         } else {
-            log.warn("The Publisher pool is fully utilized." + " destination : " + host + ":"
-                    + systemId + ", free publishers : " + freePublishers.size() + ", busy publishers : "
-                    + count);
+            log.warn("The Publisher pool is fully utilized." + " destination : " + host + ":" + systemId +
+                    ", free publishers : " + freePublishers.size() + ", busy publishers : " + count);
         }
         return null;
     }
 
     /**
-     * Add publisher that is already used into the freePublishers
-     * or destroy that publisher.
+     * Add publisher that is already used into the freePublishers or destroy that publisher.
+     *
+     * @param publisher The publisher object that need to be return.
      */
-    public void releasePublisher(ConnectionContext publisher) {
+    void releasePublisher(ConnectionContext publisher) {
         printDebugLog("Releasing Publisher : " + publisher);
         if (publisher.getSession() != null) {
             if (canHaveMorePublishers()) {
@@ -124,12 +126,17 @@ public class ConnectionPool {
     }
 
     /**
-     * Check the total no of busyPublishers + freePublishers has reached the Maximum
+     * Check the total no of busyPublishers + freePublishers has reached the Maximum.
      */
-    public boolean canHaveMorePublishers() {
+    private boolean canHaveMorePublishers() {
         return count + freePublishers.size() < maxSize;
     }
 
+    /**
+     * Used to log debug level messages.
+     *
+     * @param message Message to be printed.
+     */
     private void printDebugLog(String message) {
         if (log.isDebugEnabled()) {
             log.debug("Message : " + message + " destination : " + host + ":" + systemId + ", free publishers : " +
