@@ -22,37 +22,29 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.MessageContext;
 import org.wso2.carbon.connector.core.AbstractConnector;
 import org.wso2.carbon.connector.core.ConnectException;
-import org.wso2.carbon.connector.core.Connector;
 
 /**
  * Send SMS message to SMSC.
  *
  * @since 1.0.2
  */
-public class SendSMS extends AbstractConnector implements Connector {
-    private static final Log log = LogFactory.getLog(SendSMS.class);
-    /**
-     * Get the Connection Pool.
-     */
-    private ConnectionPool connectionPool;
-    /**
-     * Get the Connection Context.
-     */
-    private ConnectionContext connectionContext;
-    /**
-     * Is set to true if the Connection Pool is already initialized.
-     */
-    private Boolean isPoolInitialized;
+public class SendSMS extends AbstractConnector {
+    private static final Log log = LogFactory.getLog(SendSMSConnector.class);
 
     /**
-     * @param messageContext The message context that is processed by a handler in the handle method
-     * @throws ConnectException
+     * @param messageContext It is the representation for a message within the ESB message flow.
      */
     @Override
-    public void connect(MessageContext messageContext) throws ConnectException {
-        connectionContext = (ConnectionContext) messageContext.getProperty(
+    public void connect(MessageContext messageContext) {
+        /*
+          Get the Connection Context.
+         */
+        ConnectionContext connectionContext = (ConnectionContext) messageContext.getProperty(
                 SMPPConstants.CONNECTION_CONTEXT);
-        isPoolInitialized = (Boolean) messageContext.getProperty(SMPPConstants.IS_POOL_INITIALIZED);
+        /*
+          Is set to true if the Connection Pool is already initialized.
+         */
+        Boolean isPoolInitialized = (Boolean) messageContext.getProperty(SMPPConstants.IS_POOL_INITIALIZED);
         try {
             if (connectionContext.getSession() != null) {
                 connectionContext.publishMessage(messageContext);
@@ -63,7 +55,10 @@ public class SendSMS extends AbstractConnector implements Connector {
             if (!isPoolInitialized) {
                 connectionContext.close();
             } else {
-                connectionPool = (ConnectionPool) messageContext.getProperty(
+                /*
+                  Get the Connection Pool.
+                 */
+                ConnectionPool connectionPool = (ConnectionPool) messageContext.getProperty(
                         SMPPConstants.CONNECTION_POOL);
                 connectionPool.releasePublisher(connectionContext);
             }
